@@ -1,0 +1,6 @@
+python/env
+python/__pycache__
+.env
+*.z
+*.joblib
+*.csv

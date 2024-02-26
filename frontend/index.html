@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .result {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .result p, .result a {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bluesky Topic Search</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Enter your search query">
+            <div class="button-container">
+                <button onclick="searchUsers()">Search Users</button>
+                <button onclick="searchPosts()">Search Posts</button>
+            </div>
+        </div>
+        <div id="resultsContainer"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function searchUsers() {
+            var query = document.getElementById('searchInput').value;
+            var data = { query: query, type: 'user' };
+            axios.post('http://localhost:5000/search', data)
+            .then(response => {
+                displayResults(response.data, 'user');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function searchPosts() {
+            var query = document.getElementById('searchInput').value;
+            var data = { query: query, type: 'post' };
+            axios.post('http://localhost:5000/search', data)
+            .then(response => {
+                displayResults(response.data, 'post');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function displayResults(data, type) {
+            var resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.innerHTML = ''; // Clear previous results
+
+            data.forEach(result => {
+                var resultDiv = document.createElement('div');
+                resultDiv.classList.add('result');
+
+                if (type === 'post' && result.Post && result.CID && result.DID) {
+                    var postUrl = `https://bsky.app/profile/${result.DID}/post/${result.CID}`;
+                    var postLink = document.createElement('a');
+                    postLink.setAttribute('href', postUrl);
+                    postLink.setAttribute('target', '_blank');
+                    postLink.textContent = 'View post';
+                    resultDiv.appendChild(postLink);
+
+                    var postText = document.createElement('p');
+                    postText.textContent = result.Post;
+                    resultDiv.appendChild(postText);
+                } else if (type === 'user' && result.DID) {
+                    var profileUrl = `https://bsky.app/profile/${result.DID}`;
+                    var userLink = document.createElement('a');
+                    userLink.setAttribute('href', profileUrl);
+                    userLink.setAttribute('target', '_blank');
+                    userLink.textContent = 'View profile';
+                    resultDiv.appendChild(userLink);
+
+                    if (result.Similarity) {
+                        var similarity = document.createElement('p');
+                        similarity.textContent = "Similarity: " + result.Similarity.toFixed(2);
+                        resultDiv.appendChild(similarity);
+                    }
+                }
+
+                resultsContainer.appendChild(resultDiv);
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+<!-- profile: https://bsky.app/profile/${did}/
+post: https://bsky.app/profile/${did}/post/${cid}
+
+https://bsky.app/profile/andyb505.bsky.social/post/3kmbjkuuvor2p
+
+https://bsky.app/profile/andyb505.bsky.social -->
